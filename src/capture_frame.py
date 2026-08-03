@@ -30,7 +30,7 @@ def new_face():
         faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=4)
         if(face_captured==0):
             if(faces is not None):
-                cv2.imwrite(f'Recognize_face_data/{name}#{id}.jpg', frame)
+                cv2.imwrite(f'../Recognize_face_data/{name}#{id}.jpg', frame)
                 face_captured=1
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
