@@ -1,0 +1,25 @@
+Webcam
+    │
+    ▼
+Capture Frame (OpenCV)
+    │
+    ▼
+Detect Face
+    │
+    ▼
+Detect Face Landmarks
+    │
+    ▼
+Estimate Head Pose
+    │
+    ▼
+Is user looking left/right/front?
+    │
+    ▼
+Capture Image
+    │
+    ▼
+Generate Embedding
+    │
+    ▼
+Store Embedding
