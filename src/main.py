@@ -1,35 +1,22 @@
-import cv2
-import capture_frame
+import "Landmarks/capture_frame.py"
 
-cap=cv2.VideoCapture(0)
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-face_captured=0
+choose=0
 
-if not cap.isOpened():
-    print("Cannot open camera")
-    exit()
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        print("Can't receive frame (stream end?). Exiting ...")
-        break
-
-    frame=cv2.flip(frame, 1)
-
-    
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=4)
-    if(face_captured==0):
-        if(faces is not None):
-            cv2.imwrite(r'Recognize_face_data/captured_frame.jpg', frame)
-            face_captured=1
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        '''face_roi = frame[y:y + h, x:x + w]
-        cv2.imwrite('captured_face.jpg', face_roi)'''
-
-    cv2.imshow('Facial Access', frame)
-
-    if cv2.waitKey(1) == ord('q'):
-        break
+def main():
+    global choose
+    while True:
+        print("1. Capture new face")
+        print("2. Detect face")
+        print("3. Capture face")
+        print("4. Exit")
+        choose = int(input("Enter your choice: "))
+        if choose == 1:
+            new_face()
+        elif choose == 2:
+            detect_face()
+        elif choose == 3:
+            capture_face()
+        elif choose == 4:
+            break
+        else:
+            print("Invalid choice. Please try again.")
