@@ -1,4 +1,5 @@
 import cv2
+import os
 
 def new_face():
     print("Capturing new face. Press 'q' to quit.")
@@ -8,10 +9,12 @@ def new_face():
     print("Enter Your ID : ")
     id=input()
 
-
+    
     cap=cv2.VideoCapture(0)
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     face_captured=0
+    if not os.path.exists('../Recognize_face_data'):
+        os.makedirs('../Recognize_face_data')
 
     if not cap.isOpened():
         print("Cannot open camera")
