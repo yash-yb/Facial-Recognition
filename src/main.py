@@ -1,9 +1,7 @@
-import "Landmarks/capture_frame.py"
-
-choose=0
-
+import capture_frame as cf
 def main():
-    global choose
+    choose=0
+    print("Welcome to the Facial Access System")
     while True:
         print("1. Capture new face")
         print("2. Detect face")
@@ -11,11 +9,11 @@ def main():
         print("4. Exit")
         choose = int(input("Enter your choice: "))
         if choose == 1:
-            new_face()
+            cf.new_face()
         elif choose == 2:
-            detect_face()
+            cf.detect_face()
         elif choose == 3:
-            capture_face()
+            cf.capture_face()
         elif choose == 4:
             break
         else:

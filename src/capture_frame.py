@@ -1,6 +1,14 @@
 import cv2
 
 def new_face():
+    print("Capturing new face. Press 'q' to quit.")
+    print("Please look at the camera.")
+    print("Enter Your Name : ")
+    name=input()
+    print("Enter Your ID : ")
+    id=input()
+
+
     cap=cv2.VideoCapture(0)
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     face_captured=0
@@ -22,7 +30,7 @@ def new_face():
         faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=4)
         if(face_captured==0):
             if(faces is not None):
-                cv2.imwrite(r'Recognize_face_data/captured_frame.jpg', frame)
+                cv2.imwrite(f'Recognize_face_data/{name}#{id}.jpg', frame)
                 face_captured=1
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
