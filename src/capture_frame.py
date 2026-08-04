@@ -59,7 +59,7 @@ def new_face():
             window_open=False
             break
 
-    if window_open:
+    if window_open: #added cuz i thought the object is being holded by the memory by cap but even after releasing it the window is still crashing
         cap.release()
         cv2.destroyAllWindows()
 
