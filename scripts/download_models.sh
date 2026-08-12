@@ -1,41 +1,40 @@
 #!/usr/bin/env bash
-# Download YuNet + SFace ONNX models from OpenCV Zoo (Git LFS).
+# Download YuNet + SFace ONNX models (Hugging Face OpenCV Zoo mirrors).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MODELS="$ROOT/models"
 mkdir -p "$MODELS"
-TMP="$(mktemp -d)"
-cleanup() { rm -rf "$TMP"; }
-trap cleanup EXIT
 
-echo "Cloning opencv_zoo (sparse, LFS)..."
-cd "$TMP"
-git clone --depth 1 --filter=blob:none --sparse https://github.com/opencv/opencv_zoo.git repo
-cd repo
-git sparse-checkout set models/face_detection_yunet models/face_recognition_sface
-
-if command -v git-lfs >/dev/null 2>&1; then
-  git lfs install
-  git lfs pull
-else
-  echo "git-lfs not found; trying media.githubusercontent.com..."
-  curl -L "https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx" \
-    -o "$MODELS/face_detection_yunet_2023mar.onnx"
-  curl -L "https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx" \
-    -o "$MODELS/face_recognition_sface_2021dec.onnx"
-fi
-
-if [[ -f models/face_detection_yunet/face_detection_yunet_2023mar.onnx ]]; then
-  cp -f models/face_detection_yunet/face_detection_yunet_2023mar.onnx "$MODELS/"
-  cp -f models/face_recognition_sface/face_recognition_sface_2021dec.onnx "$MODELS/"
-fi
-
-for f in face_detection_yunet_2023mar.onnx face_recognition_sface_2021dec.onnx; do
-  size=$(wc -c < "$MODELS/$f" | tr -d ' ')
-  if [[ "$size" -lt 10000 ]]; then
-    echo "error: $f looks like an LFS pointer ($size bytes). Install git-lfs and re-run." >&2
+download() {
+  local url="$1" out="$2" min="$3"
+  local dest="$MODELS/$out"
+  if [[ -f "$dest" ]]; then
+    local size
+    size=$(wc -c < "$dest" | tr -d ' ')
+    if [[ "$size" -ge "$min" ]]; then
+      echo "Already present: $out ($size bytes)"
+      return
+    fi
+  fi
+  echo "Downloading $out..."
+  curl -L --fail "$url" -o "$dest"
+  local size
+  size=$(wc -c < "$dest" | tr -d ' ')
+  if [[ "$size" -lt "$min" ]]; then
+    echo "error: $out looks too small ($size bytes)" >&2
     exit 1
   fi
-  echo "OK $f ($size bytes)"
-done
+  echo "OK $out ($size bytes)"
+}
+
+download \
+  "https://huggingface.co/opencv/face_detection_yunet/resolve/main/face_detection_yunet_2023mar.onnx" \
+  "face_detection_yunet_2023mar.onnx" \
+  100000
+
+download \
+  "https://huggingface.co/opencv/face_recognition_sface/resolve/main/face_recognition_sface_2021dec.onnx" \
+  "face_recognition_sface_2021dec.onnx" \
+  1000000
+
 echo "Models saved to $MODELS"
