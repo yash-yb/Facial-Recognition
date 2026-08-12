@@ -1,6 +1,7 @@
 #include "facerec/facerec.hpp"
 
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include <opencv2/imgcodecs.hpp>
