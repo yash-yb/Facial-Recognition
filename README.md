@@ -65,11 +65,18 @@ On Windows with Visual Studio generators, binaries land under `build/Release/`. 
 ## CLI
 
 ```bash
-# Register
+# Register from image
 ./facerec_cli register --name Alice --image alice.jpg
 
-# Recognize
+# Register from webcam (preview window: SPACE = capture, ESC/Q = cancel)
+./facerec_cli register --name Alice --camera
+./facerec_cli register --name Alice --camera 1   # second camera
+
+# Recognize from image
 ./facerec_cli recognize --image unknown.jpg
+
+# Recognize from webcam (live overlay until ESC/Q)
+./facerec_cli recognize --camera
 
 # List / remove
 ./facerec_cli list
@@ -85,10 +92,12 @@ On Windows with Visual Studio generators, binaries land under `build/Release/`. 
 | Method | Path | Body |
 |--------|------|------|
 | `GET` | `/health` | — |
-| `POST` | `/v1/register` | `{"name":"Alice","image_base64":"..."}` |
-| `POST` | `/v1/recognize` | `{"image_base64":"...","top_k":1}` |
+| `POST` | `/v1/register` | `{"name":"Alice","image_base64":"..."}` **or** `{"name":"Alice","from_camera":true,"camera_id":0}` |
+| `POST` | `/v1/recognize` | `{"image_base64":"...","top_k":1}` **or** `{"from_camera":true,"camera_id":0,"top_k":1}` |
 | `GET` | `/v1/faces` | — |
 | `DELETE` | `/v1/faces/{id}` | — |
+
+`from_camera` grabs a frame from the **server machine’s** webcam (not the client’s).
 
 ### curl examples
 
@@ -96,26 +105,32 @@ On Windows with Visual Studio generators, binaries land under `build/Release/`. 
 # Health
 curl http://127.0.0.1:8080/health
 
-# Register (Git Bash / Linux)
-B64=$(base64 -w0 alice.jpg)
+# Register (camera on server)
 curl -s http://127.0.0.1:8080/v1/register \
   -H "Content-Type: application/json" \
-  -d "{\"name\":\"Alice\",\"image_base64\":\"$B64\"}"
+  -d '{"name":"Alice","from_camera":true}'
 
-# Recognize
+# Recognize (camera on server)
 curl -s http://127.0.0.1:8080/v1/recognize \
   -H "Content-Type: application/json" \
-  -d "{\"image_base64\":\"$B64\",\"top_k\":1}"
+  -d '{"from_camera":true,"top_k":1}'
 
 # List
 curl -s http://127.0.0.1:8080/v1/faces
 ```
 
-PowerShell register:
+PowerShell register (image):
 
 ```powershell
 $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes("alice.jpg"))
 $body = @{ name = "Alice"; image_base64 = $b64 } | ConvertTo-Json
+Invoke-RestMethod -Uri http://127.0.0.1:8080/v1/register -Method Post -Body $body -ContentType "application/json"
+```
+
+PowerShell register (server webcam):
+
+```powershell
+$body = @{ name = "Alice"; from_camera = $true } | ConvertTo-Json
 Invoke-RestMethod -Uri http://127.0.0.1:8080/v1/register -Method Post -Body $body -ContentType "application/json"
 ```
 
@@ -127,16 +142,19 @@ Invoke-RestMethod -Uri http://127.0.0.1:8080/v1/register -Method Post -Body $bod
 
 int main() {
   facerec::Config cfg;
-  // cfg.yunet_path / cfg.sface_path / cfg.gallery_dir if needed
   facerec::Engine engine(cfg);
 
+  // From image
   cv::Mat img = cv::imread("alice.jpg");
   std::string id = engine.registerFace(img, "Alice");
 
-  auto matches = engine.recognize(img, /*top_k=*/1);
-  if (!matches.empty()) {
-    // matches[0].name, matches[0].score
-  }
+  // One-shot webcam grab
+  id = engine.registerFaceFromCamera("Bob");
+  auto matches = engine.recognizeFromCamera(/*top_k=*/1);
+
+  // Interactive preview windows
+  engine.registerFaceFromCameraInteractive("Carol");
+  engine.recognizeFromCameraInteractive();
 }
 ```
 

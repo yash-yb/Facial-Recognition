@@ -5,11 +5,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs dnn objdetect)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs dnn objdetect videoio highgui)
 
 add_library(facerec
   src/engine.cpp
   src/gallery.cpp
+  src/camera.cpp
 )
 
 target_include_directories(facerec

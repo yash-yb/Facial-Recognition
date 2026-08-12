@@ -76,7 +76,8 @@ void printUsage(const char* argv0) {
       << "  --yunet <path>\n"
       << "  --sface <path>\n"
       << "  --gallery <dir>\n"
-      << "  --threshold <f>\n";
+      << "  --threshold <f>\n"
+      << "  --camera-id <n>   default webcam for from_camera requests (default 0)\n";
 }
 
 }  // namespace
@@ -101,6 +102,8 @@ int main(int argc, char** argv) {
         cfg.gallery_dir = requireArg(i, argc, argv, "--gallery");
       } else if (a == "--threshold") {
         cfg.match_threshold = std::stof(requireArg(i, argc, argv, "--threshold"));
+      } else if (a == "--camera-id") {
+        cfg.camera_id = std::stoi(requireArg(i, argc, argv, "--camera-id"));
       } else if (a == "-h" || a == "--help") {
         printUsage(argv[0]);
         return 0;
@@ -120,20 +123,34 @@ int main(int argc, char** argv) {
 
     svr.Post("/v1/register", [&](const httplib::Request& req, httplib::Response& res) {
       try {
-        const json body = json::parse(req.body);
-        const std::string name = body.at("name").get<std::string>();
-        const std::string b64 = body.at("image_base64").get<std::string>();
-        const auto bytes = base64Decode(b64);
-        const cv::Mat img = facerec::decodeImage(bytes);
-        if (img.empty()) {
-          throw std::runtime_error("could not decode image");
+        const json body = req.body.empty() ? json::object() : json::parse(req.body);
+        if (!body.contains("name")) {
+          throw std::runtime_error("missing name");
         }
+        const std::string name = body.at("name").get<std::string>();
+        const bool from_camera = body.value("from_camera", false);
+        int camera_id = body.value("camera_id", cfg.camera_id);
+
         std::string id;
         {
           std::lock_guard<std::mutex> lock(engine_mu);
-          id = engine->registerFace(img, name);
+          if (from_camera) {
+            id = engine->registerFaceFromCamera(name, camera_id);
+          } else {
+            if (!body.contains("image_base64")) {
+              throw std::runtime_error("provide image_base64 or from_camera=true");
+            }
+            const std::string b64 = body.at("image_base64").get<std::string>();
+            const auto bytes = base64Decode(b64);
+            const cv::Mat img = facerec::decodeImage(bytes);
+            if (img.empty()) {
+              throw std::runtime_error("could not decode image");
+            }
+            id = engine->registerFace(img, name);
+          }
         }
-        res.set_content(json{{"id", id}, {"name", name}}.dump(), "application/json");
+        res.set_content(json{{"id", id}, {"name", name}, {"source", from_camera ? "camera" : "image"}}.dump(),
+                        "application/json");
       } catch (const std::exception& ex) {
         res.status = 400;
         res.set_content(json{{"error", ex.what()}}.dump(), "application/json");
@@ -142,23 +159,31 @@ int main(int argc, char** argv) {
 
     svr.Post("/v1/recognize", [&](const httplib::Request& req, httplib::Response& res) {
       try {
-        const json body = json::parse(req.body);
-        const std::string b64 = body.at("image_base64").get<std::string>();
-        int top_k = 1;
-        if (body.contains("top_k")) {
-          top_k = body.at("top_k").get<int>();
-        }
-        const auto bytes = base64Decode(b64);
-        const cv::Mat img = facerec::decodeImage(bytes);
-        if (img.empty()) {
-          throw std::runtime_error("could not decode image");
-        }
+        const json body = req.body.empty() ? json::object() : json::parse(req.body);
+        const bool from_camera = body.value("from_camera", false);
+        int camera_id = body.value("camera_id", cfg.camera_id);
+        int top_k = body.value("top_k", 1);
+
         std::vector<facerec::Match> matches;
         {
           std::lock_guard<std::mutex> lock(engine_mu);
-          matches = engine->recognize(img, top_k);
+          if (from_camera) {
+            matches = engine->recognizeFromCamera(top_k, camera_id);
+          } else {
+            if (!body.contains("image_base64")) {
+              throw std::runtime_error("provide image_base64 or from_camera=true");
+            }
+            const std::string b64 = body.at("image_base64").get<std::string>();
+            const auto bytes = base64Decode(b64);
+            const cv::Mat img = facerec::decodeImage(bytes);
+            if (img.empty()) {
+              throw std::runtime_error("could not decode image");
+            }
+            matches = engine->recognize(img, top_k);
+          }
         }
         json out;
+        out["source"] = from_camera ? "camera" : "image";
         out["matches"] = json::array();
         for (const auto& m : matches) {
           out["matches"].push_back({{"id", m.id}, {"name", m.name}, {"score", m.score}});
