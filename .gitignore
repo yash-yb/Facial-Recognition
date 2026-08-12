@@ -1,0 +1,40 @@
+# Build
+/build/
+/out/
+/cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+*.obj
+*.o
+*.exe
+*.dll
+*.lib
+*.a
+*.pdb
+*.ilk
+*.exp
+
+# Models (download via scripts/download_models.ps1)
+/models/*.onnx
+
+# Runtime gallery
+/data/gallery/index.json
+/data/gallery/embeddings/*
+!/data/gallery/embeddings/.gitkeep
+
+# IDE / local
+.vs/
+.vscode/
+.idea/
+*.user
+.venv/
+__pycache__/
+*.pyc
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
