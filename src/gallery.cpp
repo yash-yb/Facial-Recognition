@@ -27,7 +27,7 @@ std::string makeId() {
 }  // namespace
 
 Gallery::Gallery(std::string gallery_dir) : gallery_dir_(std::move(gallery_dir)) {
-  fs::create_directories(gallery_dir_ / fs::path("embeddings"));
+  fs::create_directories(fs::path(gallery_dir_) / "embeddings");
 }
 
 std::string Gallery::indexPath() const {
