@@ -27,7 +27,6 @@ The previous Python / MediaPipe prototype path is retired; this tree is the supp
 - CMake ≥ 3.16
 - C++17 compiler
 - OpenCV 4.5.4+ with `core`, `imgproc`, `imgcodecs`, `dnn`, `objdetect` (YuNet / SFace APIs)
-- [git-lfs](https://git-lfs.com/) recommended for model download
 
 ### Windows (MSYS2 UCRT64)
 
@@ -36,6 +35,8 @@ pacman -S mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-opencv mingw-w64-ucr
 ```
 
 ## Download models
+
+Models are fetched from the official OpenCV Zoo mirrors on Hugging Face:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/download_models.ps1

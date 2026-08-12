@@ -24,6 +24,7 @@ compile_commands.json
 /data/gallery/index.json
 /data/gallery/embeddings/*
 !/data/gallery/embeddings/.gitkeep
+/data/sample_face.jpg
 
 # IDE / local
 .vs/

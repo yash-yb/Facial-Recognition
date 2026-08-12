@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
       }
     });
 
-    std::cout << "facerec_server listening on http://" << host << ":" << port << "\n";
+    std::cout << "facerec_server listening on http://" << host << ":" << port << std::endl;
     if (!svr.listen(host, port)) {
       throw std::runtime_error("failed to bind " + host + ":" + std::to_string(port));
     }
